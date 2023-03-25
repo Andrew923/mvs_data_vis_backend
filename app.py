@@ -3,7 +3,7 @@ import os, base64
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app/"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
 def home():
@@ -16,7 +16,7 @@ def get_directories():
 
     folders = list()
     for folder in os.listdir(os.getcwd()):
-        if os.path.isdir(folder) and folder != '.git':
+        if os.path.isdir(folder) and folder not in ['.git', '.venv', '__pycache__']:
             folders.append(folder)
     return jsonify(folders=folders)
 
