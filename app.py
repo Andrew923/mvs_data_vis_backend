@@ -3,6 +3,7 @@ import os, base64
 from flask_cors import CORS
 
 app = Flask(__name__)
+os.environ['port'] = '3000'
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
@@ -57,4 +58,4 @@ def get_limits(directory):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=int(os.environ.get('port')))
