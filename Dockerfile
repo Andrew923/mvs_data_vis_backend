@@ -2,6 +2,8 @@ FROM theairlab/dsta_ngc_x86:22.08_10_opencv_override
 
 WORKDIR /app
 
+ADD images /app/images
+
 COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
