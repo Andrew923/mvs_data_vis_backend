@@ -2,60 +2,72 @@ from flask import Flask, jsonify, request
 import os, base64
 from flask_cors import CORS
 
+from dsta_mvs.dsta_mvs.mvs_utils.image_io.image_read import read_compressed_float
+
 app = Flask(__name__)
 os.environ['port'] = '3000'
+os.environ['directory'] = 'images'
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
 def home():
-    return "<p>Hello, World!</p>"
+    return "<p>Hello!</p>"
 
-#get the list of options
-@app.route("/getoptions", methods=['GET'])
+#get the list of scenes
+@app.route("/getscenes", methods=['GET'])
 def get_directories():
-    if request.method != 'GET': return "Not supported"
+    if request.method != 'GET': return jsonify(success=False)
 
     folders = list()
-    for folder in os.listdir(os.getcwd()):
-        if os.path.isdir(folder) and folder not in ['.git', '.venv', '__pycache__']:
+    for folder in os.listdir(os.environ.get('directory')):
+        if os.path.isdir(f"{os.environ.get('directory')}/{folder}"):
             folders.append(folder)
-    return jsonify(folders=folders)
+    return jsonify(folders=folders, success=True)
+
+#get list of poses
+@app.route("/getposes/<scene>", methods=['GET'])
+def get_poses(scene):
+    if request.method != 'GET': return jsonify(success=False)
+    if scene == "": return jsonify(poses=list(), success=True)
+
+    poses = list()
+    for folder in os.listdir(f"{os.environ.get('directory')}/{scene}"):
+        if os.path.isdir(f"{os.environ.get('directory')}/{scene}/{folder}"):
+            poses.append(folder)
+    return jsonify(poses=poses, success=True)
 
 #return images at directory with index
-@app.route("/<directory>/<index>", methods=['GET'])
-def get_images(directory="images", index="000000"):
-    if request.method != 'GET': return "Not supported"
+@app.route("/<scene>/<pose>/<index>", methods=['GET'])
+def get_images(scene, pose, index="000000"):
+    if request.method != 'GET': return jsonify(success=False)
 
-    image_data = []
+    directory = f"{os.environ.get('directory')}/{scene}/{pose}"
+
+    #extract minimum and maximum indices
+    indices = os.listdir(f"{directory}/cam0")
+    indices = [int(v.split('_')[0]) for v in indices if "Fisheye" in v]
+    max_index, min_index = max(indices), min(indices)
+    if int(index) > max_index or int(index) < min_index:
+        return jsonify(success=False)
+
+    #get images
+    image_data = list()
+    distance_data = list()
     for folder in os.listdir(directory):
         if not folder.startswith("cam"): continue
 
         for filename in os.listdir(f"{directory}/{folder}"):
-            if filename.startswith(index) and "Distance" not in filename:
-                with open(f"{directory}/{folder}/{filename}", 'rb') as f:
-                    image_data.append(base64.b64encode(f.read()).decode('utf-8'))
+            if filename.startswith(index):
+                if "Distance" in filename:
+                    arr = read_compressed_float(f"{directory}/{folder}/{filename}")
+                    distance_data.append(arr.tolist())
+                else:
+                    with open(f"{directory}/{folder}/{filename}", 'rb') as f:
+                        image_data.append(base64.b64encode(f.read()).decode('utf-8'))
     if len(image_data) == 0:
         return 'No images found'
     else:
-        return jsonify(image_data=image_data)
-
-#get minimum and maximum index in a directory
-@app.route("/indices/<directory>", methods=['GET'])
-def get_limits(directory):
-    if request.method != 'GET': return "Not supported"
-
-    minIndex, maxIndex = float('inf'), 0
-    for folder in os.listdir(directory):
-        if not folder.startswith("cam"): continue
-
-        for file in os.listdir(f"{directory}/{folder}"):
-            if "Fisheye" in file:
-                index = int(file.split('_')[0])
-                minIndex = min(minIndex, index)
-                maxIndex = max(maxIndex, index)
-        break
-    return jsonify(minIndex=minIndex, maxIndex=maxIndex)
-
+        return jsonify(image_data=image_data, distance_data=distance_data, success=True)
 
 if __name__ == '__main__':
     app.run(port=int(os.environ.get('port')))
