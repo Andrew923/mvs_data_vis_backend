@@ -1,0 +1,27 @@
+{
+    "cams": [
+        {
+            "img_types": [ "Scene", "DepthPlanar" ],
+            "airsim_cam_nums": [0],
+            "frame": "cbf0",
+            "image_frame": "cif0",
+            "is_rig": true
+        },
+        {
+            "img_types": [ "Scene", "DepthPlanar" ],
+            "airsim_cam_nums": [0],
+            "frame": "cbf1",
+            "image_frame": "cif1",
+            "is_rig": false
+        },
+        {
+            "img_types": [ "Scene", "DepthPlanar" ],
+            "airsim_cam_nums": [0],
+            "frame": "cbf2",
+            "image_frame": "cif2",
+            "is_rig": false
+        }
+    ],
+    "rig_img_types": [ "Scene", "DepthPlanar" ],
+    "randomize_orientation": false
+}

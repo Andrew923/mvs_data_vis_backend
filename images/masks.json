@@ -1,0 +1,16 @@
+{
+    "masks": [
+        {
+            "raw_camera": "cam0",
+            "mask": "valid_mask_0.png"
+        },
+        {
+            "raw_camera": "cam1",
+            "mask": "valid_mask_1.png"
+        },
+        {
+            "raw_camera": "cam2",
+            "mask": "valid_mask_2.png"
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "training": {
+        "CoalMineExposure": [
+            "Pose_000",
+            "Pose_001"
+        ],
+        "DesertGasStation": [
+            "Pose_000",
+            "Pose_001"
+        ]
+    }
+}

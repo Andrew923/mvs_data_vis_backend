@@ -1,0 +1,326 @@
+{
+    "frames": [
+        {
+            "name": "awf",
+            "comment": "AirSim World NED Frame. "
+        },
+        {
+            "name": "rbf",
+            "comment": "Rig UE Body Frame. "
+        },
+        {
+            "name": "rtif",
+            "comment": "Rig TartanAir Image Frame. "
+        },
+        {
+            "name": "rif",
+            "comment": "Rig Image Frame. After preprocessing. "
+        },
+        {
+            "name": "cbf0",
+            "comment": "Camera UE Body Frame 0. "
+        },
+        {
+            "name": "ctif0",
+            "comment": "Camera TartanAir Image Frame 0. "
+        },
+        {
+            "name": "cif0",
+            "comment": "Camera Image Frame 0. After preprocessing. "
+        },
+        {
+            "name": "cbf1",
+            "comment": "Camera Body Frame 1. "
+        },
+        {
+            "name": "ctif1",
+            "comment": "Camera TartanAir Image Frame 1. "
+        },
+        {
+            "name": "cif1",
+            "comment": "Camera Image Frame 1. After preprocessing. "
+        },
+        {
+            "name": "cbf2",
+            "comment": "Camera Body Frame 2. "
+        },
+        {
+            "name": "ctif2",
+            "comment": "Camera TartanAir Image Frame 2. "
+        },
+        {
+            "name": "cif2",
+            "comment": "Camera Image Frame 2. After preprocessing. "
+        },
+        {
+            "name": "cif0s",
+            "comment": "Camera Image Frame 1, surrogate camera model."
+        },
+        {
+            "name": "cif1s",
+            "comment": "Camera Image Frame 2, surrogate camera model."
+        },
+        {
+            "name": "cif2s",
+            "comment": "Camera Image Frame 2, surrogate camera model."
+        },
+        {
+            "name": "rifs",
+            "comment": "Rig Image Frame, surrogate camera model."
+        },
+        {
+            "name": "cv",
+            "comment": "Cost volume frame."
+        }
+    ],
+    "typical_poses": {
+        "T_body_image": {
+            "position": [ 0.0, 0.0, 0.0 ],
+            "orientation": {
+                "type": "rotation_matrix",
+                "data": [
+                    0.0, 0.0, 1.0, 
+                    1.0, 0.0, 0.0, 
+                    0.0, 1.0, 0.0
+                ]
+            }
+        },
+        "T_cif_cifs": {
+            "position": [ 0.0, 0.0, 0.0 ],
+            "orientation": {
+                "type": "rotation_matrix",
+                "data": [
+                    1.0,  0.0,  0.0, 
+                    0.0,  0.0,  1.0, 
+                    0.0, -1.0,  0.0
+                ]
+            }
+        },
+        "T_identity": {
+            "position": [ 0.0, 0.0, 0.0 ],
+            "orientation": {
+                "type": "rotation_matrix",
+                "data": [
+                    1.0,  0.0,  0.0, 
+                    0.0,  1.0,  0.0, 
+                    0.0,  0.0,  1.0
+                ]
+            }
+        }
+    },
+    "transforms_backup": [
+        {
+            "comment": "Used for representing ORD drone. ",
+            "f0": "rtif",
+            "f1": "rif",
+            "pose": {
+                "type": "create",
+                "position": [0.0, 0.0, 0.0],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                       -1.0,  0.0,  0.0,
+                        0.0,  0.0, -1.0,
+                        0.0, -1.0,  0.0
+                    ]
+                }
+            }
+        },
+        {
+            "comment": "Used for have an unwraped requirectangular image during preprocessing. ",
+            "f0": "rtif",
+            "f1": "rif",
+            "pose": {
+                "type": "create",
+                "position": [0.0, 0.0, 0.0],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                        1.0,  0.0,  0.0,
+                        0.0,  0.0,  1.0,
+                        0.0, -1.0,  0.0
+                    ]
+                }
+            }
+        }
+    ],
+    "transforms": [
+        {
+            "f0": "awf",
+            "f1": "rbf",
+            "pose": {
+                "type": "create",
+                "position": [ 0.0, 0.0, 0.0 ],
+                "orientation": {
+                    "type": "quaternion",
+                    "data": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0,
+                        "w": 1.0
+                    }
+                }
+            }
+        },
+        {
+            "f0": "rbf",
+            "f1": "rtif",
+            "pose": {
+                "type": "reference",
+                "key": "T_body_image"
+            }
+        },
+        {
+            "f0": "rtif",
+            "f1": "rif",
+            "pose": {
+                "type": "reference",
+                "key": "T_identity"
+            }
+        },
+        {
+            "f0": "rbf",
+            "f1": "cbf0",
+            "pose": {
+                "type": "create",
+                "position": [0.0, 0.0, 0.0],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                        1.0,  0.0,  0.0,
+                        0.0,  1.0,  0.0,
+                        0.0,  0.0,  1.0
+                    ]
+                }
+            }
+        },
+        {
+            "f0": "cbf0",
+            "f1": "ctif0",
+            "pose": {
+                "type": "reference",
+                "key": "T_body_image"
+            }
+        },
+        {
+            "f0": "ctif0",
+            "f1": "cif0",
+            "pose": {
+                "type": "reference",
+                "key": "T_identity"
+            }
+        },
+        {
+            "f0": "rbf",
+            "f1": "cbf1",
+            "pose": {
+                "type": "create",
+                "position": [0.0, -0.119, -0.28571],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                        1.0,  0.0,  0.0,
+                        0.0,  1.0,  0.0,
+                        0.0,  0.0,  1.0
+                    ]
+                }
+            }
+        },
+        {
+            "f0": "cbf1",
+            "f1": "ctif1",
+            "pose": {
+                "type": "reference",
+                "key": "T_body_image"
+            }
+        },
+        {
+            "f0": "ctif1",
+            "f1": "cif1",
+            "pose": {
+                "type": "reference",
+                "key": "T_identity"
+            }
+        },
+        {
+            "f0": "rbf",
+            "f1": "cbf2",
+            "pose": {
+                "type": "create",
+                "position": [0.0, 0.119, -0.28571],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                        1.0,  0.0,  0.0,
+                        0.0,  1.0,  0.0,
+                        0.0,  0.0,  1.0
+                    ]
+                }
+            }
+        },
+        {
+            "f0": "cbf2",
+            "f1": "ctif2",
+            "pose": {
+                "type": "reference",
+                "key": "T_body_image"
+            }
+        },
+        {
+            "f0": "ctif2",
+            "f1": "cif2",
+            "pose": {
+                "type": "reference",
+                "key": "T_identity"
+            }
+        },
+        {
+            "f0": "cif0",
+            "f1": "cif0s",
+            "pose": {
+                "type": "reference",
+                "key": "T_cif_cifs"
+            }
+        },
+        {
+            "f0": "cif1",
+            "f1": "cif1s",
+            "pose": {
+                "type": "reference",
+                "key": "T_cif_cifs"
+            }
+        },
+        {
+            "f0": "cif2",
+            "f1": "cif2s",
+            "pose": {
+                "type": "reference",
+                "key": "T_cif_cifs"
+            }
+        },
+        {
+            "f0": "rif",
+            "f1": "rifs",
+            "pose": {
+                "type": "create",
+                "position": [0.0, 0.0, 0.0],
+                "orientation": {
+                    "type": "rotation_matrix",
+                    "data": [
+                        1.0,  0.0,  0.0,
+                        0.0,  0.0,  1.0,
+                        0.0, -1.0,  0.0
+                    ]
+                }
+            }
+        },
+        {
+            "f0": "rifs",
+            "f1": "cv",
+            "pose": {
+                "type": "reference",
+                "key": "T_identity"
+            }
+        }
+    ]
+}
