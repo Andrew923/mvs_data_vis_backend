@@ -7,7 +7,7 @@ from dsta_mvs.dsta_mvs.mvs_utils.image_io.image_read import read_compressed_floa
 app = Flask(__name__)
 os.environ['port'] = '3000'
 os.environ['directory'] = 'images'
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3001", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
 def home():
@@ -18,11 +18,11 @@ def home():
 def get_directories():
     if request.method != 'GET': return jsonify(success=False)
 
-    folders = list()
+    scenes = list()
     for folder in os.listdir(os.environ.get('directory')):
         if os.path.isdir(f"{os.environ.get('directory')}/{folder}"):
-            folders.append(folder)
-    return jsonify(folders=folders, success=True)
+            scenes.append(folder)
+    return jsonify(scenes=scenes, success=True)
 
 #get list of poses
 @app.route("/getposes/<scene>", methods=['GET'])
@@ -65,7 +65,7 @@ def get_images(scene, pose, index="000000"):
                     with open(f"{directory}/{folder}/{filename}", 'rb') as f:
                         image_data.append(base64.b64encode(f.read()).decode('utf-8'))
     if len(image_data) == 0:
-        return 'No images found'
+        return jsonify(success=False)
     else:
         return jsonify(image_data=image_data, distance_data=distance_data, success=True)
 
