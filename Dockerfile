@@ -11,4 +11,4 @@ ENV port=3000
 
 EXPOSE 3000
 
-# ENTRYPOINT ["./gunicorn.sh"]
+ENTRYPOINT ["./gunicorn.sh"]

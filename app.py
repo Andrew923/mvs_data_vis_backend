@@ -1,12 +1,22 @@
+import os
+import sys
+
+# The path of the current Python script.
+_CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
+_TOP_PATH     = os.path.join(_CURRENT_PATH, 'dsta_mvs')
+
+if _TOP_PATH not in sys.path:
+    sys.path.insert( 0, _TOP_PATH)
+    for i, p in enumerate(sys.path):
+        print(f'{i}: {p}')
+
 from flask import Flask, jsonify, request
-import os, base64
+import base64
 from flask_cors import CORS
 
-from dsta_mvs.dsta_mvs.mvs_utils.image_io.image_read import read_compressed_float
+from api.dataset_player import DatasetProxy
 
 app = Flask(__name__)
-os.environ['port'] = '3000'
-os.environ['directory'] = 'images'
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3001", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
@@ -57,17 +67,30 @@ def get_images(scene, pose, index="000000"):
         if not folder.startswith("cam"): continue
 
         for filename in os.listdir(f"{directory}/{folder}"):
-            if filename.startswith(index):
-                if "Distance" in filename:
-                    arr = read_compressed_float(f"{directory}/{folder}/{filename}")
-                    distance_data.append(arr.tolist())
-                else:
-                    with open(f"{directory}/{folder}/{filename}", 'rb') as f:
-                        image_data.append(base64.b64encode(f.read()).decode('utf-8'))
+            if filename.startswith(index) and "Distance" not in filename:
+                with open(f"{directory}/{folder}/{filename}", 'rb') as f:
+                    image_data.append(base64.b64encode(f.read()).decode('utf-8'))
+
+    #get transformation matrices and camera model objects
+    dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
+    transformations = dict()
+    camera_frame = dataset_player.dataset.map_camera_frame
+    cameras = [v for k, v in camera_frame.items() if 'cam' in k]
+    for i in range(len(cameras)):
+        for j in range(len(cameras)):
+            if i != j:
+                transformations[(cameras[i], cameras[j])] = dataset_player.dataset.frame_graph.query_transform(f0=cameras[i], f1=cameras[j])
+    camera_models = dict([(k, v.__dict__) for k, v in dataset_player.dataset.map_camera_model_raw.items()]) #raw or not raw
+
+    
     if len(image_data) == 0:
         return jsonify(success=False)
     else:
-        return jsonify(image_data=image_data, distance_data=distance_data, success=True)
+        return jsonify(image_data=image_data, 
+                       distance_data=distance_data, 
+                       transformations=transformations,
+                       camera_models=camera_models,
+                       success=True)
 
 if __name__ == '__main__':
-    app.run(port=int(os.environ.get('port')))
+    app.run(port=3000)
