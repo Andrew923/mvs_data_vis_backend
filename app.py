@@ -15,6 +15,7 @@ import base64
 from flask_cors import CORS
 
 from api.dataset_player import DatasetProxy
+dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3001", "https://mvs-data-vis.vercel.app"]}})
@@ -71,8 +72,18 @@ def get_images(scene, pose, index="000000"):
                 with open(f"{directory}/{folder}/{filename}", 'rb') as f:
                     image_data.append(base64.b64encode(f.read()).decode('utf-8'))
 
-    #get transformation matrices and camera model objects
-    dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
+    if len(image_data) == 0:
+        return jsonify(success=False)
+    else:
+        return jsonify(image_data=image_data, 
+                       distance_data=distance_data, 
+                       success=True)
+
+#get transformation matrices
+@app.route("/transformations", methods=['GET'])
+def get_transformations():
+    if request.method != 'GET': return jsonify(success=False)
+
     transformations = dict()
     camera_frame = dataset_player.dataset.map_camera_frame
     cameras = [v for k, v in camera_frame.items() if 'cam' in k]
@@ -80,17 +91,24 @@ def get_images(scene, pose, index="000000"):
         for j in range(len(cameras)):
             if i != j:
                 transformations[(cameras[i], cameras[j])] = dataset_player.dataset.frame_graph.query_transform(f0=cameras[i], f1=cameras[j])
-    camera_models = dict([(k, v.__dict__) for k, v in dataset_player.dataset.map_camera_model_raw.items()]) #raw or not raw
-
-    
-    if len(image_data) == 0:
+    if len(transformations) == 0:
         return jsonify(success=False)
     else:
-        return jsonify(image_data=image_data, 
-                       distance_data=distance_data, 
-                       transformations=transformations,
-                       camera_models=camera_models,
+        return jsonify(transformations=transformations,
                        success=True)
+    
+#get camera models
+@app.route("/cameras", methods=['GET'])
+def get_cameras():
+    if request.method != 'GET': return jsonify(success=False)
+
+    camera_models = dict([(k, v.__dict__) for k, v in dataset_player.dataset.map_camera_model_raw.items()]) #raw or not raw
+    if len(camera_models) == 0:
+        return jsonify(success=False)
+    else:
+        return jsonify(camera_models=camera_models,
+                       success=True)
+
 
 if __name__ == '__main__':
     app.run(port=3000)
