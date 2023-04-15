@@ -18,7 +18,7 @@ from api.dataset_player import DatasetProxy
 dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3001", "https://mvs-data-vis.vercel.app"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
 
 @app.route("/")
 def home():
@@ -62,7 +62,7 @@ def get_images(scene, pose, index="000000"):
         return jsonify(success=False)
 
     #get images
-    image_data = list()
+    image_data = dict()
     distance_data = list()
     for folder in os.listdir(directory):
         if not folder.startswith("cam"): continue
@@ -70,7 +70,7 @@ def get_images(scene, pose, index="000000"):
         for filename in os.listdir(f"{directory}/{folder}"):
             if filename.startswith(index) and "Distance" not in filename:
                 with open(f"{directory}/{folder}/{filename}", 'rb') as f:
-                    image_data.append(base64.b64encode(f.read()).decode('utf-8'))
+                    image_data[folder] = base64.b64encode(f.read()).decode('utf-8')
 
     if len(image_data) == 0:
         return jsonify(success=False)
@@ -86,11 +86,12 @@ def get_transformations():
 
     transformations = dict()
     camera_frame = dataset_player.dataset.map_camera_frame
-    cameras = [v for k, v in camera_frame.items() if 'cam' in k]
-    for i in range(len(cameras)):
-        for j in range(len(cameras)):
+    cameras = {k: v for k, v in camera_frame.items() if 'cam' in k}
+    for i in cameras.keys():
+        for j in cameras.keys():
             if i != j:
-                transformations[(cameras[i], cameras[j])] = dataset_player.dataset.frame_graph.query_transform(f0=cameras[i], f1=cameras[j])
+                matrix = dataset_player.dataset.frame_graph.query_transform(f0=cameras[i], f1=cameras[j])
+                transformations[f"{i}-{j}"] = matrix.tolist()
     if len(transformations) == 0:
         return jsonify(success=False)
     else:
@@ -102,7 +103,10 @@ def get_transformations():
 def get_cameras():
     if request.method != 'GET': return jsonify(success=False)
 
-    camera_models = dict([(k, v.__dict__) for k, v in dataset_player.dataset.map_camera_model_raw.items()]) #raw or not raw
+    camera_models = dict()
+    for cam, fields in dataset_player.dataset.map_camera_model_raw.items():
+        new_fields = {k: v for k, v in fields.__dict__.items() if k in ['name', 'fx', 'fy', 'cx', 'cy', 'fov_degree', 'fov_rad']}
+        camera_models[cam] = new_fields
     if len(camera_models) == 0:
         return jsonify(success=False)
     else:
