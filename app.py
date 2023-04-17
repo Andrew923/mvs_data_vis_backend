@@ -113,6 +113,18 @@ def get_cameras():
         return jsonify(camera_models=camera_models,
                        success=True)
 
+#get distance
+@app.route("/distance/<scene>/<pose>/<index>", methods=['GET'])
+def get_distance(scene, pose, index):
+    filenames = dataset_player.dataset.filenames['rig_dist_fisheye']
+    try:
+        i = filenames.index(f'{scene}/{pose}/cam0/{index}_FisheyeDistance.png') #hardcoded filename format
+    except ValueError:
+        return jsonify(success=False)
+    
+    distance = dataset_player.dataset[i]['inv_dist_idx']
+    return jsonify(distance=distance.tolist(),
+                success=True)
 
 if __name__ == '__main__':
     app.run(port=3000)
