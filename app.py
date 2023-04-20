@@ -114,16 +114,19 @@ def get_cameras():
                        success=True)
 
 #get distance
-@app.route("/distance/<scene>/<pose>/<index>", methods=['GET'])
+@app.route("/distances/<scene>/<pose>/<index>", methods=['GET'])
 def get_distance(scene, pose, index):
-    filenames = dataset_player.dataset.filenames['rig_dist_fisheye']
-    try:
-        i = filenames.index(f'{scene}/{pose}/cam0/{index}_FisheyeDistance.png') #hardcoded filename format
-    except ValueError:
-        return jsonify(success=False)
-    
-    distance = dataset_player.dataset[i]['inv_dist_idx']
-    return jsonify(distance=distance.tolist(),
+    if request.method != 'GET': return jsonify(success=False)
+
+    camera_frame = dataset_player.dataset.map_camera_frame
+    cameras = [k for k, _ in camera_frame.items() if 'cam' in k]
+    distances = dict()
+    for cam in cameras:
+        filenames = dataset_player.dataset.filenames[f'{cam}_dist_fisheye']
+        i = filenames.index(f'{scene}/{pose}/{cam}/{index}_FisheyeDistance.png') #hardcoded filename format
+        
+        distances[cam] = dataset_player.dataset[i]['inv_dist_idx'].tolist()
+    return jsonify(distances=distances, bf=dataset_player.dataset.dist_lab_tab.bf,
                 success=True)
 
 if __name__ == '__main__':
