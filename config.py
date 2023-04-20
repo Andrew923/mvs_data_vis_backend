@@ -71,10 +71,10 @@ conf_map_additional_camera_model=dict(
 
 # Use empty string when surrogation is disabled for the input.
 map_camera_frame=dict(
-    cam0='', 
-    cam1='',
-    cam2='',
-    rig='',
+    cam0='cif0',
+    cam1='cif1',
+    cam2='cif2',
+    rig='rif',
     cv='cv',
 )
 
