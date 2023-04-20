@@ -10,37 +10,50 @@ no_depth_resz   = False
 align_corners   = False
 align_corners_nearest = False 
 
+# The suffix '_er' means equi-rectangular.
+# Typical values.
+unwrap_shape_er  = dict(H=512, W=2048)
+cv_shape_er      = dict(H=80, W=320)
+mvs_out_shape_er = dict(H=160, W=640)
+# Debugging values, for better visualization.
+# unwrap_shape_er  = dict(H=512, W=2048)
+# cv_shape_er      = dict(H=512, W=2048)
+# mvs_out_shape_er = dict(H=512, W=2048)
+
 # These camera models are for the grid makers.
 # Surrogate camera model.
-cam_model_input=dict(
-    type='Equirectangular',
-    shape_struct=dict(H=1024, W=1024),
-    latitude_span=( -np.pi/2, 0 ),
-    open_span=False,
-    in_to_tensor=True, 
-    out_to_numpy=False )
+# cam_model_input=dict(
+#     type='Equirectangular',
+#     shape_struct=unwrap_shape_er,
+#     latitude_span=( -np.pi/2, 0 ),
+#     open_span=False,
+#     in_to_tensor=True, 
+#     out_to_numpy=False )
 
-cam_model_output=dict(
-    type='Equirectangular',
-    shape_struct=dict(H=160, W=640),
-    latitude_span=( -np.pi/2, 0 ),
-    open_span=False,
-    in_to_tensor=True, 
-    out_to_numpy=False )
+# cam_model_output=dict(
+#     type='Equirectangular',
+#     shape_struct=mvs_out_shape_er,
+#     latitude_span=( -np.pi/2, 0 ),
+#     open_span=False,
+#     in_to_tensor=True, 
+#     out_to_numpy=False )
 
-conf_map_surrogate_camera_model=dict(
-    cam0=cam_model_input,
-    cam1=cam_model_input,
-    cam2=cam_model_input,
-    rig=cam_model_output,
-)
+# conf_map_surrogate_camera_model=dict(
+#     cam0=cam_model_input,
+#     cam1=cam_model_input,
+#     cam2=cam_model_input,
+#     rig=cam_model_output,
+# )
+
+# Use an empty dict of camera models to disable surrogation. 
+conf_map_surrogate_camera_model=dict()
 
 # This is for samplers.
 # The rotation matrices for the samplers are all embedded in the frame graph.
 conf_map_additional_camera_model=dict(
     cv=dict(
         type='Equirectangular',
-        shape_struct=dict(H=80, W=320),
+        shape_struct=cv_shape_er,
         latitude_span=( -np.pi/2, 0 ),
         open_span=False,
         in_to_tensor=True, 
@@ -48,11 +61,20 @@ conf_map_additional_camera_model=dict(
 )
 
 # The frames must be present in the frame graph and have proper transforms associated with them.
+# map_camera_frame=dict(
+#     cam0='cif0s', # The "s" suffix is for "surrogate".
+#     cam1='cif1s',
+#     cam2='cif2s',
+#     rig='rifs',
+#     cv='cv',
+# )
+
+# Use empty string when surrogation is disabled for the input.
 map_camera_frame=dict(
-    cam0='cif0s', # The "s" suffix is for "surrogate".
-    cam1='cif1s',
-    cam2='cif2s',
-    rig='rifs',
+    cam0='', 
+    cam1='',
+    cam2='',
+    rig='',
     cv='cv',
 )
 
@@ -116,7 +138,7 @@ config=dict(
     ),
     dataloader=dict(
         batch_size=2,
-        num_workers=1,
+        num_workers=0,
         shuffle_train=True,
         shuffle_test=True,
         grid_maker_builder=dict(
@@ -126,6 +148,30 @@ config=dict(
         ),
         conf_map_additional_camera_model=conf_map_additional_camera_model,
         train_dataset=dict(
+            type='MultiViewCameraModelDataset',
+            metadata_fn="metadata.json", # Under the dataset path.
+            frame_graph_fn="frame_graph.json", # Under the dataset path.
+            conf_dist_blend_func=dict(
+                type='BlendBy2ndOrderGradTorch',
+                threshold_scaling_factor=0.01,
+            ),
+            conf_dist_lab_tab=dict(
+                type='FixedDistLabelTable',
+                dist_list=dist_list,
+                bf=bf,
+            ),
+            map_camera_frame=map_camera_frame,
+            cam_key_cv='cv',
+            align_corners=align_corners,
+            align_corners_nearest=align_corners_nearest,
+            data_keys=['training'],
+            mask_path='masks.json',
+            csv_input_rgb_suffix='_rgb_fisheye',
+            csv_rig_rgb_suffix='_rgb_fisheye',
+            csv_rig_dist_suffix='_dist_fisheye',
+        ),
+        test_dataset=dict(
+            # type='MultiViewCameraModelDataset',
             type='FullDistDataset',
             metadata_fn="metadata.json", # Under the dataset path.
             frame_graph_fn="frame_graph.json", # Under the dataset path.
@@ -145,9 +191,9 @@ config=dict(
             data_keys=['training'],
             mask_path='masks.json',
             csv_input_rgb_suffix='_rgb_fisheye',
-            csv_rig_rgb_suffix='_rgb_pano',
+            csv_rig_rgb_suffix='_rgb_fisheye',
             csv_rig_dist_suffix='_dist_fisheye',
-        )
+        ),
     ),
     augmentation=dict(
         type = 'AugmentationSequence',
@@ -245,3 +291,4 @@ config=dict(
         )
     )
 )
+
