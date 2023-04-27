@@ -1,3 +1,6 @@
 [submodule "dsta_mvs"]
 	path = dsta_mvs
 	url = https://github.com/castacks/dsta_mvs.git
+[submodule "dsta_mvs_lightning"]
+	path = dsta_mvs_lightning
+	url = https://github.com/castacks/dsta_mvs_lightning.git
