@@ -3,10 +3,11 @@ import sys
 
 # The path of the current Python script.
 _CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
-_TOP_PATH     = os.path.join(_CURRENT_PATH, 'dsta_mvs')
+_TOP_PATH     = os.path.join(_CURRENT_PATH, 'dsta_mvs_lightning')
 
 if _TOP_PATH not in sys.path:
     sys.path.insert( 0, _TOP_PATH)
+    sys.path.insert( 1, os.path.join(_CURRENT_PATH, 'dsta_mvs'))
     for i, p in enumerate(sys.path):
         print(f'{i}: {p}')
 
