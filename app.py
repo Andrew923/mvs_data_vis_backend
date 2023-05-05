@@ -8,22 +8,50 @@ _TOP_PATH     = os.path.join(_CURRENT_PATH, 'dsta_mvs_lightning')
 if _TOP_PATH not in sys.path:
     sys.path.insert( 0, _TOP_PATH)
     sys.path.insert( 1, os.path.join(_CURRENT_PATH, 'dsta_mvs'))
-    for i, p in enumerate(sys.path):
-        print(f'{i}: {p}')
+    # for i, p in enumerate(sys.path):
+    #     print(f'{i}: {p}')
 
 from flask import Flask, jsonify, request
 import base64
 from flask_cors import CORS
 
 from api.dataset_player import DatasetProxy
-dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
+dataset_player = None
+if None not in [os.environ.get('CONFIG'), os.environ.get('directory')]:
+    dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
 
-@app.route("/")
+@app.route("/", methods=['GET', 'PUT'])
 def home():
-    return "<p>Hello!</p>"
+    global dataset_player
+    if request.method == 'GET': return jsonify(success=(dataset_player != None))
+    
+    if request.method != 'PUT': return jsonify(success=False)
+
+    #PUT dataset
+    print("Uploading dataset ...")
+    target = os.path.join(os.getcwd(), 'dataset')
+    if not os.path.isdir(target):
+        os.mkdir(target)
+
+    for file in request.files.getlist('files[]'):
+        filename = os.path.join(target, file.filename)
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+        file.save(filename)
+
+    for file in os.listdir(target):
+        if "conf" in file and ".py" in file:
+            os.rename(os.path.join(target, file), os.path.join(os.getcwd(), file))
+            dataset_player = DatasetProxy(f'./{file}', './dataset')
+            os.environ['CONFIG'] = f'./{file}'
+            break
+    os.environ['directory'] = './dataset'
+    print("Dataset uploaded!")
+    return jsonify(success=(dataset_player != None))
+
 
 #get the list of scenes
 @app.route("/getscenes", methods=['GET'])
@@ -85,6 +113,7 @@ def get_images(scene, pose, index="000000"):
 def get_transformations():
     if request.method != 'GET': return jsonify(success=False)
 
+    global dataset_player
     transformations = dict()
     camera_frame = dataset_player.dataset.map_camera_frame
     cameras = {k: v for k, v in camera_frame.items() if 'cam' in k}
@@ -104,6 +133,7 @@ def get_transformations():
 def get_cameras():
     if request.method != 'GET': return jsonify(success=False)
 
+    global dataset_player
     camera_models = dict()
     for cam, fields in dataset_player.dataset.map_camera_model_raw.items():
         new_fields = {k: v for k, v in fields.__dict__.items() if k in ['name', 'fx', 'fy', 'cx', 'cy', 'fov_degree', 'fov_rad']}
@@ -119,6 +149,7 @@ def get_cameras():
 def get_distance(scene, pose, index):
     if request.method != 'GET': return jsonify(success=False)
 
+    global dataset_player
     camera_frame = dataset_player.dataset.map_camera_frame
     cameras = [k for k, _ in camera_frame.items() if 'cam' in k]
     distances = dict()
