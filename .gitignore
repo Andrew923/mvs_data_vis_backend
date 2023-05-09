@@ -2,3 +2,7 @@ test.ipynb
 .vscode/
 .bashrc
 test.py
+ca_bundle.crt
+certificate.crt
+private.key
+8D6E664D5104BBC1F85C2F88AE9A186D.txt

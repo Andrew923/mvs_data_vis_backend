@@ -4,7 +4,6 @@ lib/
 .bashrc
 .gitignore
 .gitmodules
-fly.toml
 upload.sh
 images/
 config.py

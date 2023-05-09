@@ -30,6 +30,11 @@ CORS(app, resources={r"/*": {"origins": [r"http://localhost:\d+", "https://mvs-d
 # def css(folder, file):
 #     return send_from_directory(os.getcwd() + '/build/static/', folder + '/' + file)
 
+#SSL certification stuff
+@app.route("/.well-known/pki-validation/<file>", methods=['GET'])
+def ssl_cert(file):
+    return send_from_directory(os.getcwd(), file, as_attachment=True)
+
 @app.route("/", methods=['GET'])
 def home():
     return "<h1>Hello!</h1>"

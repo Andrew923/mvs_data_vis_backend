@@ -5,12 +5,7 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY dsta_mvs dsta_mvs
-COPY dsta_mvs_lightning dsta_mvs_lightning
-
-COPY app.py app.py
-COPY gunicorn.sh gunicorn.sh
-
+COPY . .
 
 ENV port=3000
 EXPOSE 3000
