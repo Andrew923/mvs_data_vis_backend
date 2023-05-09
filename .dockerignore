@@ -1,4 +1,10 @@
 test.ipynb
 .vscode/
+lib/
 .bashrc
-test.py
+.gitignore
+.gitmodules
+fly.toml
+upload.sh
+images/
+config.py

@@ -8,10 +8,8 @@ _TOP_PATH     = os.path.join(_CURRENT_PATH, 'dsta_mvs_lightning')
 if _TOP_PATH not in sys.path:
     sys.path.insert( 0, _TOP_PATH)
     sys.path.insert( 1, os.path.join(_CURRENT_PATH, 'dsta_mvs'))
-    # for i, p in enumerate(sys.path):
-    #     print(f'{i}: {p}')
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, send_from_directory
 import base64
 from flask_cors import CORS
 
@@ -21,10 +19,23 @@ if None not in [os.environ.get('CONFIG'), os.environ.get('directory')]:
     dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://mvs-data-vis.vercel.app"]}})
+CORS(app, resources={r"/*": {"origins": [r"http://localhost:\d+", "https://mvs-data-vis.vercel.app"]}})
 
-@app.route("/", methods=['GET', 'PUT'])
+#STATIC SITE STUFF, maybe retry later
+# app = Flask(__name__, static_folder='build', template_folder='build', static_url_path='')
+# @app.route("/", methods=['GET'])
+# def index():
+#     return render_template('index.html')
+# @app.route("/static/<folder>/<file>", methods=['GET'])
+# def css(folder, file):
+#     return send_from_directory(os.getcwd() + '/build/static/', folder + '/' + file)
+
+@app.route("/", methods=['GET'])
 def home():
+    return "<h1>Hello!</h1>"
+
+@app.route("/upload", methods=['GET', 'PUT'])
+def upload():
     global dataset_player
     if request.method == 'GET': return jsonify(success=(dataset_player != None))
     
@@ -52,11 +63,18 @@ def home():
     print("Dataset uploaded!")
     return jsonify(success=(dataset_player != None))
 
+@app.route("/clear", methods=['GET'])
+def clear():
+    global dataset_player
+    if request.method != 'GET': return jsonify(success=False)
+    dataset_player = None
+    return jsonify(success=True)
 
 #get the list of scenes
 @app.route("/getscenes", methods=['GET'])
 def get_directories():
-    if request.method != 'GET': return jsonify(success=False)
+    global dataset_player
+    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
 
     scenes = list()
     for folder in os.listdir(os.environ.get('directory')):
@@ -67,8 +85,9 @@ def get_directories():
 #get list of poses
 @app.route("/getposes/<scene>", methods=['GET'])
 def get_poses(scene):
+    global dataset_player
     if request.method != 'GET': return jsonify(success=False)
-    if scene == "": return jsonify(poses=list(), success=True)
+    if scene == "" or dataset_player == None: return jsonify(poses=list(), success=True)
 
     poses = list()
     for folder in os.listdir(f"{os.environ.get('directory')}/{scene}"):
@@ -79,7 +98,8 @@ def get_poses(scene):
 #return images at directory with index
 @app.route("/<scene>/<pose>/<index>", methods=['GET'])
 def get_images(scene, pose, index="000000"):
-    if request.method != 'GET': return jsonify(success=False)
+    global dataset_player
+    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
 
     directory = f"{os.environ.get('directory')}/{scene}/{pose}"
 
@@ -111,9 +131,9 @@ def get_images(scene, pose, index="000000"):
 #get transformation matrices
 @app.route("/transformations", methods=['GET'])
 def get_transformations():
-    if request.method != 'GET': return jsonify(success=False)
-
     global dataset_player
+    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
+
     transformations = dict()
     camera_frame = dataset_player.dataset.map_camera_frame
     cameras = {k: v for k, v in camera_frame.items() if 'cam' in k}
@@ -131,9 +151,9 @@ def get_transformations():
 #get camera models
 @app.route("/cameras", methods=['GET'])
 def get_cameras():
-    if request.method != 'GET': return jsonify(success=False)
-
     global dataset_player
+    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
+
     camera_models = dict()
     for cam, fields in dataset_player.dataset.map_camera_model_raw.items():
         new_fields = {k: v for k, v in fields.__dict__.items() if k in ['name', 'fx', 'fy', 'cx', 'cy', 'fov_degree', 'fov_rad']}
@@ -147,9 +167,9 @@ def get_cameras():
 #get distance
 @app.route("/distances/<scene>/<pose>/<index>", methods=['GET'])
 def get_distance(scene, pose, index):
-    if request.method != 'GET': return jsonify(success=False)
-
     global dataset_player
+    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
+
     camera_frame = dataset_player.dataset.map_camera_frame
     cameras = [k for k, _ in camera_frame.items() if 'cam' in k]
     distances = dict()
