@@ -10,11 +10,18 @@ if _TOP_PATH not in sys.path:
     sys.path.insert( 1, os.path.join(_CURRENT_PATH, 'dsta_mvs'))
 
 from flask import Flask, jsonify, request, render_template, send_from_directory
-import base64
+import base64, shutil
 from flask_cors import CORS
 
 from api.dataset_player import DatasetProxy
 dataset_player = None
+
+#search in data folder
+if os.listdir('mvs_data_vis_backend/data'):
+    os.environ['directory'] = 'mvs_data_vis_backend/data'
+    for file in os.listdir('mvs_data_vis_backend/data'):
+        if 'conf' in file: os.environ['CONFIG'] = f'mvs_data_vis_backend/data/{file}'
+
 if None not in [os.environ.get('CONFIG'), os.environ.get('directory')]:
     dataset_player = DatasetProxy(os.environ.get('CONFIG'), os.environ.get('directory'))
 
@@ -49,8 +56,8 @@ def upload():
     #PUT dataset
     print("Uploading dataset ...")
     target = os.path.join(os.getcwd(), 'dataset')
-    if not os.path.isdir(target):
-        os.mkdir(target)
+    if os.path.isdir(target): shutil.rmtree(target)
+    os.mkdir(target)
 
     for file in request.files.getlist('files[]'):
         filename = os.path.join(target, file.filename)
@@ -79,7 +86,8 @@ def clear():
 @app.route("/getscenes", methods=['GET'])
 def get_directories():
     global dataset_player
-    if request.method != 'GET' or dataset_player == None: return jsonify(success=False)
+    if request.method != 'GET': return jsonify(success=False)
+    if dataset_player == None: return jsonify(scenes=list(), success=True)
 
     scenes = list()
     for folder in os.listdir(os.environ.get('directory')):
@@ -187,4 +195,4 @@ def get_distance(scene, pose, index):
                 success=True)
 
 if __name__ == '__main__':
-    app.run(port=3000)
+    app.run(port=3001)

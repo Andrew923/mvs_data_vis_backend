@@ -1,9 +1,0 @@
-test.ipynb
-.vscode/
-lib/
-.bashrc
-.gitignore
-.gitmodules
-upload.sh
-images/
-config.py
